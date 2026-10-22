@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict');
+const C=require('./core.js');
+const fs=require('node:fs'),vm=require('node:vm');
+const source=fs.readFileSync(__dirname+'/app.js','utf8');
+const sample=vm.runInNewContext(source.slice(source.indexOf('const sample=')).replace(/shelf\(\);\s*$/,'')+'\nsample');
+assert.equal(C.validatePack(sample).essays.length,1);
+const state={essays:sample.essays,progress:{saved:{draft:'my work'}}};
+const update=JSON.parse(JSON.stringify(sample));update.essays[0].title='updated';
+const merged=C.merge(state,update);assert.equal(merged.essays.length,1);assert.equal(merged.essays[0].title,'updated');assert.equal(merged.progress.saved.draft,'my work');assert.notEqual(state.essays[0].title,'updated');
+assert.throws(()=>C.validatePack({schemaVersion:2,essays:sample.essays}));
+const bad=JSON.parse(JSON.stringify(sample));bad.essays[0].cards.push(bad.essays[0].cards[0]);assert.throws(()=>C.validatePack(bad));
+assert.notEqual(C.key('a:b','cards','c'),C.key('a','cards','b:c'));
+assert.equal(C.grade(null,'会了',0).due,86400000);assert.equal(C.grade({level:4},'不熟',0).due,600000);assert.equal(C.grade({level:4},'会了',0).level,4);
+assert.equal(C.normalize('  An  Example '),'an example');
+console.log('PASS: schema validation, duplicate IDs, update preservation, review schedule, exact answer normalization');
