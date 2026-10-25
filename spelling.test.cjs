@@ -1,0 +1,16 @@
+const assert=require('node:assert/strict');
+const S=require('./spelling-core.js');
+assert.equal(S.normalize(' Place   greater emphasis on… '),'place greater emphasis on');
+assert.notEqual(S.normalize('place emphasis on'),S.normalize('place greater emphasis on'));
+assert.equal(S.diff('place greater emphasis','place greater emphasis on').at(-1).kind,'missing');
+assert.equal(S.diff('place greater emphasis in','place greater emphasis on').at(-1).kind,'replace');
+assert.equal(S.diff('place greater emphasis on on','place greater emphasis on').filter(x=>x.kind==='extra').length,1);
+const entry={answer:'living standards',prompt:'生活水平'};
+assert.equal(S.merge([],[entry,entry]).length,1);
+assert.throws(()=>S.validate([{answer:'a'}]));
+assert.throws(()=>S.validateProgress({x:{level:7}}));
+assert.equal(S.grade(null,true,0).due,86400000);
+assert.equal(S.grade({level:4,attempts:4,mistakes:0},false,0).due,600000);
+assert.equal(S.grade({level:4,attempts:4,mistakes:0},true,0).level,4);
+assert.deepEqual(S.validateProgress({x:S.grade(null,true,0)}).x,S.grade(null,true,0));
+console.log('PASS: phrase normalization, missing/extra/wrong words, deduplication, validation, review scheduling.');
